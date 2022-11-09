@@ -10,9 +10,7 @@
           label="Cedula de Identidad" @keyup="buscar"/></div>
         <div class="q-pa-xs"><q-input bg-color="blue-grey-1" outlined rounded v-model="persona.nombre" type="text" label="Nombre Completo" /></div>
         <div class="q-pa-xs"><q-input bg-color="blue-grey-1" outlined rounded v-model="persona.telefono" type="text" label="Celular" /></div>
-        <div class="q-pa-xs"><q-select bg-color="blue-grey-1" outlined v-model="distrito" :options="distritos" label="Distrito"
-          @input ="cargar(distrito)" /></div>
-        <div class="q-pa-xs"><q-btn color="teal" icon="my_location"  @click="geolocate()" /></div>
+        <div class="q-pa-xs"><q-btn color="teal" icon="my_location"  @click="geolocate()" />{{ubicacion}}</div>
       </div>
       <div class="q-pa-md   col-md-6 col-xs-12">
         <gmap-map
@@ -31,10 +29,13 @@
   >
   <gmap-marker
       :position="ubicacion"
-      :draggable="false"
+      :draggable="true"
+      :clickable="true"
+      @drag="updateCoordinates"
+      @click="cargarUbicacion"
       title="Usted esta Aqui"
       :optimized=true
-      icon="http://maps.google.com/mapfiles/ms/icons/purple-dot.png"
+      icon="http://maps.google.com/mapfiles/ms/icons/ylw-pushpin.png"
     >
     </gmap-marker>
     <gmap-marker
@@ -70,7 +71,7 @@
 
         <q-card-actions align="right" class="text-primary">
           <q-btn flat label="Cancel" color="red" v-close-popup icon="cancel" />
-          <q-btn flat label="Registrar" color="green" @click="enviarReclamo" icon="send" />
+          <q-btn flat label="Registrar" color="green" @click="registrarReclamo" icon="send" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -91,15 +92,8 @@ export default {
       zoom: 16,
       marker:{},
       postes:[],
-      d1:[],
-      d2:[],
-      d3:[],
-      d4:[],
-      d5:[],
       datos:[],
       ubicacion:{lat:-17.970310, lng:-67.111780},
-      distrito:{label:'D1',value:'D1'},
-      distritos:['D1','D2','D3','D4','D5'],
       center: {lat:-17.970310, lng:-67.111780},
       backgroundDiv : {
         backgroundImage : 'url(bg.jpg)',
@@ -110,16 +104,40 @@ export default {
   },
   mounted(){
     this.geolocate()
-    this.mispuntos()
-    this.cargar(this.distrito)
+    //this.mispuntos()
   },
   methods:{
+    cargarUbicacion(){
+      this.$axios.post('calcularArea',{lat:this.ubicacion.lat,lng:this.ubicacion.lng,distancia:200}).then(res=>{
+          console.log(res.data)
+          this.datos=res.data
+      })
+    },
+    updateCoordinates(location) {
+            this.ubicacion = {
+                lat: location.latLng.lat(),
+                lng: location.latLng.lng(),
+            };
+
+        },
     registrarReclamo(){
       if(this.denuncia.reclamo==undefined || this.denuncia.reclamo==''){
+        this.$q.notify({
+          message: 'Ingrese su Reclamo',
+          color: 'red',
+          icon:'info'
+        })
         return false
       }
+      if(this.persona.id==undefined) this.persona.id=''
+      this.denuncia.persona=this.persona
       this.denuncia.fecha=date.formatDate(new Date(),'YYYY-MM-DD')
       this.denuncia.hora=date.formatDate(new Date(),'HH:mm')
+      this.denuncia.punto=this.punto
+      this.$axios.post('reclamo',this.denuncia).then(res=>{
+        console.log(res.data)
+      })
+
     },
     seleccionar(){
         if(this.persona.ci==undefined ||
@@ -137,6 +155,7 @@ export default {
         this.dialogReclamo=true
     },
     cargar(dist){
+
     this.$q.loading.show()
 
       switch (dist) {
@@ -149,6 +168,7 @@ export default {
           this.datos=[]
           break;
       }
+
     this.$q.loading.hide()
 
     },
@@ -158,40 +178,25 @@ export default {
         console.log(res.data)
         if(res.data){
           this.persona=res.data
-          this.distrito=this.persona.distrito
-          //this.cargar(this.distrito)
         }
         else{
           this.persona.id=''
           this.persona.nombre=''
           this.persona.telefono=''
-          this.persona.distrito=''
         }
 
       })
     },
-    mispuntos(){
-      this.postes=[]
-      this.$q.loading.show()
-      this.$axios.get('poste').then(res=>{
-        this.postes=res.data
-        res.data.forEach(r => {
-          if(r.distrito=='D2') this.d2.push(r)
-          if(r.distrito=='D2 EXT') this.d2.push(r)
-          if(r.distrito=='D4') this.d4.push(r)
-          if(r.distrito=='D4 EXT') this.d4.push(r)
-          if(r.distrito=='D5') this.d5.push(r)
-          if(r.distrito=='D5 EXT') this.d5.push(r)
-        });
-        this.$q.loading.hide()
-      })
-    },
-    geolocate() {
+
+    async geolocate() {
       this.ubicacion= {lat:0, lng:0}
       // check if API is supported
+
       if (navigator.geolocation) {
+
       navigator.geolocation.getCurrentPosition((position) => {
         console.log(position)
+
         this.marker.position = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -204,8 +209,24 @@ export default {
           this.datos=res.data
       })
 
-      }
-      );}
+      },function(error){
+// El segundo parámetro es la función de error
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            console.log("El usuario denegó el permiso para la Geolocalización")
+            break;
+        case error.POSITION_UNAVAILABLE:
+            console.log("La ubicación no está disponible.")
+            break;
+        case error.TIMEOUT:
+            console.log("Se ha excedido el tiempo para obtener la ubicación")
+            break;
+        case error.UNKNOWN_ERROR:
+            console.log(" Un error desconocido.")
+            break;
+    }
+  });}
+
     },
   }
 }
