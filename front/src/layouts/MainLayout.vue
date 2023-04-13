@@ -16,13 +16,13 @@
         <!--        </q-toolbar-title>-->
 
         <!--        <div>Quasar v{{ $q.version }}</div>-->
-        <div class="text-center full-width text-h6 text-bold" style="font-size:15px">
+        <div class="text-center full-width text-h6 text-bold" style="font-size:14px">
           <q-img
-            src="https://gamo.gob.bo/wp-content/uploads/elementor/thumbs/marca-institucional-2022-e1643873909890-pjyiv2fg12uw9v9urkdgy5u20guux11kopxuo3x9rk.png"
+            src="oruro1.png"
             spinner-color="white"
             style="height: 40px; max-width: 50px; "
           />
-          Gobierno Autonomo Municipal de Oruro <br>(Unidad de Alumbrado Publico)
+          Gobierno Autonomo Municipal de Oruro <br>Unidad de Alumbrado Publico y Servicios Electricos
         </div>
       </q-toolbar>
     </q-header>

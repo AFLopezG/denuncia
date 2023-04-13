@@ -5,7 +5,9 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/Index.vue') },
-      { path: 'consulta', component: () => import('pages/Consulta.vue') }
+      { path: 'consulta', component: () => import('pages/Consulta.vue') },
+      { path: 'reclamos', component: () => import('pages/Reclamos.vue') },
+      { path: 'reclamos/:cedula', component: () => import('pages/Reclamos.vue') }
     ]
   },
 

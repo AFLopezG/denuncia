@@ -3,40 +3,79 @@
       <q-page >
       <div class="row" :style="backgroundDiv">
         <div class="q-pa-md col-md-6 col-xs-12">
-          <div  style="width:100% ;" align="center">
+          <div  style="width:100%;" align="center">
           <!--q-banner rounded class="bg-green text-white text-h5" style="width:100%; text-align: center; ">-->
-           <q-btn dense class="text-h6" color='green' @click="$router.replace({ path: '/consulta' })">IR CONSULTA RECLAMOS</q-btn>
+           <q-btn dense  class="text-h6" color='green' @click="$router.replace({ path: '/consulta' })">IR CONSULTA RECLAMOS</q-btn>
 
       </div>
-          <div class="q-pa-xs">
-            <q-input bg-color="blue-grey-1" outlined rounded v-model="persona.ci"
+          <div class="q-pa-xs"><q-input dense bg-color="blue-grey-1" outlined rounded v-model="persona.ci"
             label="Cedula de Identidad *" @change="buscar"/></div>
-          <div class="q-pa-xs"><q-input bg-color="blue-grey-1" outlined rounded v-model="persona.nombre" type="text" label="Nombre Completo *" /></div>
-          <div class="q-pa-xs"><q-input bg-color="blue-grey-1" outlined rounded v-model="persona.telefono" type="text" label="Celular *" /></div>
-          <div class="q-pa-xs row"><div class="col-10"><q-input bg-color="blue-grey-1" dense outlined rounded v-model="nposte" type="text" label="Nro Poste" /></div>
-        <div class="col-2"><q-btn color="green"  icon="search" @click="buscarPoste" /></div></div>
-        <div style="color:white; font-weight: bold; background: gray; font-size: 10px;"> * Puede arrastrar su ubicacion o hacer click en cualquier parte del mapa</div>
+          <div class="q-pa-xs"><q-input dense bg-color="blue-grey-1" outlined rounded v-model="persona.nombre" type="text" label="Nombre Completo *" /></div>
+          <div class="q-pa-xs"><q-input  dense  bg-color="blue-grey-1" outlined rounded v-model="persona.telefono" type="text" label="Celular *" /></div>
+          <div class="q-pa-xs"><q-input dense bg-color="blue-grey-1" outlined rounded v-model="reclamo" type="textarea" label="Detalle de Reclamo *" /></div>
+          <div class="q-pa-xs row"><div class="col-10"><q-input  bg-color="blue-grey-1" dense outlined rounded v-model="nposte" type="text" label="Nro Poste" /></div><div class="col-2"> <q-btn color="green"  icon="search" @click="buscarPoste" /></div></div>
+          <div class="q-pa-xs"><q-btn  color="green-8" label="REGISTRAR" @click="registrarReclamo"/></div>
+          <div style="color:white; font-weight: bold; background: gray; font-size: 10px;"> * Puede arrastrar su ubicacion o hacer click en cualquier parte del mapa</div>
           <div style="color:white; font-weight: bold; background: gray; font-size: 10px;" > * Hacer click al punto de su ubicacion para cargar los postes cercanos</div>
           <div style="color:white; font-weight: bold; background: gray; font-size: 10px;"> * Click sobre alguno de los postes para registrar su reclamo</div>
           <div style="color:white; font-weight: bold; background: gray; font-size: 10px;"> * Llamar a 52-76362 si no encuentra el poste</div>
+
         </div>
-        <div class="q-pa-md col-md-6 col-xs-12">
-          <l-map style="height: 50vh" :zoom="zoom" :center="center" @click="cargarpunto">
+
+        <div class="q-pa-md   col-md-6 col-xs-12">
+
+          <l-map style="height: 70vh" :zoom="zoom" :center="center" @click="cargarpunto ">
             <l-tile-layer :url="styleMap?`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`:`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`"
                         layer-type="base"
                         name="OpenStreetMap" :attribution="attribution"></l-tile-layer>
-          <l-marker :lat-lng="[lat,lng]" draggable  @moveend="updateCoordinates" @click="cargarUbicacion" title="Usted esta Aqui">
-          <l-icon icon-url="http://maps.google.com/mapfiles/ms/icons/ylw-pushpin.png" />
-
+          <l-marker :lat-lng="[lat,lng]" draggable  @moveend="updateCoordinates" @click="cargarUbicacion" title="Usted esta Aqui"
+          >
+          <l-icon
+            icon-url="http://maps.google.com/mapfiles/ms/icons/ylw-pushpin.png"
+          />
         </l-marker>
           <l-marker v-for="m in datos" :key="m.id" :lat-lng="[m.lat,m.lng]" @click="center=[m.lat,m.lng];punto=m;seleccionar(); ">        <l-icon
             icon-url="http://maps.google.com/mapfiles/ms/icons/red-dot.png"
           /></l-marker>
 
+
       </l-map>
       </div>
-
       </div>
+      <div class="col-12 q-pa-xs">
+        <q-table
+          :data="lista"
+          :columns="colmlist"
+          dense
+          row-key="name"
+        >
+        <template v-slot:body-cell-opcion="props">
+            <q-td key="opcion" :props="props">
+              <q-btn color="red" icon="delete" size="xs" round @click="delreclamo(props)" />
+            </q-td>
+
+        </template>
+        </q-table>
+      </div>
+      <q-dialog v-model="agregar" persistent>
+        <q-card style="width: 300px">
+          <q-card-section class="row items-center">
+            <span class="q-ml-sm">AGREGAR A LISTA RECLAMO</span>
+          </q-card-section>
+          <q-card-section>
+              <div class="col-md-3 col-xs-12"><b>MATERIAL :</b> {{punto.material}}</div>
+              <div class="col-md-3 col-xs-12"><b>LUMINARIA :</b> {{punto.luminaria}}</div>
+              <div class="col-md-3 col-xs-12"><b>ALTURA :</b> {{punto.altura}}</div>
+              <div class="col-md-3 col-xs-12"><b>POTENCIA :</b> {{punto.potencia}}</div>
+              <div class="col-12"><b>OBSERVACION : </b>{{punto.observacion}}</div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="CANCEL" color="red" v-close-popup />
+            <q-btn flat label="AGREGAR" color="green" @click="addPunto" />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
       <q-dialog v-model="dialogReclamo" full-width>
         <q-card >
           <q-card-section>
@@ -62,43 +101,46 @@
         </q-card>
       </q-dialog>
     </q-page>
-
   </template>
 
   <script>
   import {date} from "quasar";
-  import path from "path";
 
   export default {
     name: 'PageIndex',
     data(){
       return {
-        styleMap: true,
-
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        url2: 'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',
+        styleMap:true,
         attribution:
           '&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-        zoom: 16,
-        markerLatLng: [-17.970310, -67.111780],
+        colmlist:[
+          {label:'OPC',field:'opcion',name:'opcion'},
+          {label:'NRO',field:'nroposte',name:'nroposte'},
+          {label:'LUMINARIA',field:'luminaria',name:'luminaria'},
+          {label:'POTENCIA',field:'potencia',name:'potencia'},
+          {label:'MATERIAL',field:'material',name:'material'},
+        ],
         persona:{},
+        agregar:false,
         punto:{},
         denuncia:{},
+        reclamo:'',
+        lista:[],
         nposte:'',
         dialogReclamo:false,
-        lat:0,
-        lng:0,
+        zoom: 16,
         marker:{},
         postes:[],
         urlbase:'https://electrica.gamo.cf/#/consulta',
-
+        lat:0,
+        lng:0,
         datos:[],
-        ubicacion:[-17.970310, -67.111780],
-        center: [-17.970310, -67.111780],
+        ubicacion:{lat:-17.970310, lng:-67.111780},
+        center: {lat:-17.970310, lng:-67.111780},
         backgroundDiv : {
           backgroundImage : 'url(bg.jpg)',
           backgroundRepeat : 'no-repeat',
-          backgroundSize : "cover"
+          backgroundSize : '100% 100%',
         },
         opts : {
           errorCorrectionLevel: 'M',
@@ -129,6 +171,24 @@
       //this.mispuntos()
     },
     methods:{
+      cargarpunto(value){
+        console.log(value.latlng)
+            //return false
+            this.lat= value.latlng.lat
+                this.lng= value.latlng.lng
+              this.ubicacion = [this.lat,this.lng];
+              this.center=this.ubicacion
+      },
+      delreclamo(indice){
+        console.log(indice)
+        this.lista.splice(indice.rowIndex,1)
+      },
+      addPunto(){
+        if(!this.lista.find(x=> x.id==this.punto.id)){
+        this.lista.push(this.punto)
+       }
+       this.agregar=false
+      },
       handleMarkerDrag(e) {
         this.ubicacion = { lat: e.latLng.lat(), lng: e.latLng.lng() };
       },
@@ -138,14 +198,6 @@
             this.datos=res.data
         })
       },
-      cargarpunto(value){
-        console.log(value.latlng)
-            //return false
-            this.lat= value.latlng.lat
-                this.lng= value.latlng.lng
-              this.ubicacion = [this.lat,this.lng];
-              this.center=this.ubicacion
-      },
       updateCoordinates(l) {
                 this.lat= l.target._latlng.lat
                 this.lng= l.target._latlng.lng
@@ -154,7 +206,7 @@
 
           },
       registrarReclamo(){
-        if(this.denuncia.reclamo==undefined || this.denuncia.reclamo==''){
+        if(this.reclamo==undefined || this.reclamo==''){
           this.$q.notify({
             message: 'Ingrese su Reclamo',
             color: 'red',
@@ -162,28 +214,34 @@
           })
           return false
         }
+        if(this.persona.ci==undefined || this.persona.ci=='' ||
+           this.persona.nombre==undefined || this.persona.nombre=='' ||
+           this.persona.telefono==undefined || this.persona.telefono==''
+           ){
+            this.$q.notify({
+            message: 'Registre sus datos',
+            color: 'red',
+            icon:'info'
+          })
+          return false
+           }
         if(this.persona.id==undefined) this.persona.id=''
         this.denuncia.persona=this.persona
         this.denuncia.fecha=date.formatDate(new Date(),'YYYY-MM-DD')
         this.denuncia.hora=date.formatDate(new Date(),'HH:mm')
-        this.denuncia.punto=this.punto
-        this.$axios.post('reclamo',this.denuncia).then(res=>{
+        this.denuncia.listado=this.lista
+        this.denuncia.reclamo=this.reclamo
+        this.$axios.post('registroMultiple',this.denuncia).then(res=>{
           console.log(res.data)
-          this.printReclamo(res.data)
+          //this.printReclamo(res.data)
           this.dialogReclamo=false
           this.$q.notify({
             message: 'Su Reclamo fue Registrado',
             color: 'green',
             icon:'info'
           })
-        }).catch(err=>{
-          this.$q.notify({
-            message:err.response.data.message,
-            icon:'error',
-            color:'red'
-          })
         })
-        this.denuncia.reclamo=''
+        this.reclamo=''
         this.persona={}
         this.denuncia={}
         this.nposte=''
@@ -201,7 +259,7 @@
           return false
           }
           this.zoom=19
-          this.dialogReclamo=true
+          this.agregar=true
       },
       cargar(dist){
 
@@ -224,11 +282,10 @@
       buscarPoste(){
         this.datos=[]
         this.$axios.get('buscarPoste/'+this.nposte).then(res=>{
-          console.log()
           if(res.data.length>0){
 
             this.datos.push(res.data[0])
-            this.ubicacion={lat:res.data[0].lat,lng:res.data[0].lng};
+            this.ubicacion=[res.data[0].lat,res.data[0].lng]
             this.center=this.ubicacion
             this.zoom=18;
           }
@@ -253,17 +310,17 @@
       async geolocate() {
         this.ubicacion= [0, 0]
         // check if API is supported
-        console.log(navigator.geolocation)
+
         if (navigator.geolocation) {
 
         navigator.geolocation.getCurrentPosition((position) => {
           console.log(position)
-          this.lat=position.coords.latitude
-            this.lng=position.coords.longitude
 
+            this.lat= position.coords.latitude,
+            this.lng= position.coords.longitude,
           this.ubicacion=[this.lat,this.lng];
           this.center=this.ubicacion
-          this.zoom=17;
+          this.zoom=18;
           this.$axios.post('calcularArea',{lat:this.lat,lng:this.lng,distancia:200}).then(res=>{
             console.log(res.data)
             this.datos=res.data
