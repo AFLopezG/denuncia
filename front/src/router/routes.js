@@ -7,7 +7,7 @@ const routes = [
       { path: '', component: () => import('pages/Index.vue') },
       { path: 'consulta', component: () => import('pages/Consulta.vue') },
       { path: 'reclamos', component: () => import('pages/Reclamos.vue') },
-      { path: 'reclamos/:cedula', component: () => import('pages/Reclamos.vue') }
+      { path: 'consulta/:cedula', component: () => import('pages/Consulta.vue') }
     ]
   },
 

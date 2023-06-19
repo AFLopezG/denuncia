@@ -22,17 +22,21 @@
         </div>
         <div class="q-pa-md col-md-6 col-xs-12">
           <l-map style="height: 50vh" :zoom="zoom" :center="center" @click="cargarpunto">
-            <l-tile-layer :url="styleMap?`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`:`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`"
-                        layer-type="base"
+            <l-tile-layer :url="styleMap?`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`:`http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}`"
+                                layer-type="base"
                         name="OpenStreetMap" :attribution="attribution"></l-tile-layer>
           <l-marker :lat-lng="[lat,lng]" draggable  @moveend="updateCoordinates" @click="cargarUbicacion" title="Usted esta Aqui">
-          <l-icon icon-url="http://maps.google.com/mapfiles/ms/icons/ylw-pushpin.png" />
+          <l-icon icon-url="pinyw.png" />
 
         </l-marker>
           <l-marker v-for="m in datos" :key="m.id" :lat-lng="[m.lat,m.lng]" @click="center=[m.lat,m.lng];punto=m;seleccionar(); ">        <l-icon
             icon-url="http://maps.google.com/mapfiles/ms/icons/red-dot.png"
           /></l-marker>
 
+          <l-control position="topright" >
+          <q-btn @click="geolocate" icon="my_location" class="bg-primary text-white" dense round></q-btn>
+          <q-btn @click="styleMap=!styleMap" icon="map" class="bg-primary text-white" dense round></q-btn>
+                    </l-control>
       </l-map>
       </div>
 
@@ -90,7 +94,6 @@
         lng:0,
         marker:{},
         postes:[],
-        urlbase:'https://electrica.gamo.cf/#/consulta',
 
         datos:[],
         ubicacion:[-17.970310, -67.111780],
@@ -169,7 +172,7 @@
         this.denuncia.punto=this.punto
         this.$axios.post('reclamo',this.denuncia).then(res=>{
           console.log(res.data)
-          this.printReclamo(res.data)
+          //this.printReclamo(res.data)
           this.dialogReclamo=false
           this.$q.notify({
             message: 'Su Reclamo fue Registrado',
@@ -178,7 +181,7 @@
           })
         }).catch(err=>{
           this.$q.notify({
-            message:err.response.data.message,
+            message:err.data.message,
             icon:'error',
             color:'red'
           })
@@ -237,7 +240,7 @@
       },
       buscar(){
         let carnet=this.persona.ci
-        this.$axios.post('buscarPersona/'+carnet).then(res=>{
+        this.$axios.get('buscarPersona/'+carnet).then(res=>{
           console.log(res.data)
           if(res.data){
             this.persona=res.data
@@ -258,12 +261,12 @@
 
         navigator.geolocation.getCurrentPosition((position) => {
           console.log(position)
-          this.lat=position.coords.latitude
+            this.lat=position.coords.latitude
             this.lng=position.coords.longitude
+            this.zoom=18;
 
           this.ubicacion=[this.lat,this.lng];
           this.center=this.ubicacion
-          this.zoom=17;
           this.$axios.post('calcularArea',{lat:this.lat,lng:this.lng,distancia:200}).then(res=>{
             console.log(res.data)
             this.datos=res.data
